@@ -1,7 +1,7 @@
 # storj-location-parser
 
 
-## H2 Requirements
+## Requirements
 ```
 python -m pip install Geohash
 python -m pip install influxdb
