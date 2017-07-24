@@ -23,6 +23,9 @@ Influxdb python client: https://github.com/influxdata/influxdb-python
 #The nodeID to be monitored
 NODE_ID = "23c20fc08ec5c1c23696b46daf0600d1c58170bc"
 
+#Path to your storj log folder
+LOG_FOLDER_PATH = "/root/storj/logs/"
+
 #INFLUXDB details
 INFLUXDB_DATABASE = "renter_monitoring"
 INFLUXDB_ADDRESS = "192.168.0.15"
