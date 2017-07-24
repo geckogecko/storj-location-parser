@@ -5,9 +5,8 @@ import Geohash
 import datetime
 import Queue
 import os
+import requests
 
-from urllib2 import urlopen
-from urllib2 import HTTPError
 from influxdb import InfluxDBClient
 
 
@@ -15,7 +14,7 @@ from influxdb import InfluxDBClient
 NODE_ID = "23c20fc08ec5c1c23696b46daf0600d1c58170bc"
 
 #Path to your storj log folder
-LOG_FOLDER_PATH = "/root/storj/logs/"
+LOG_FOLDER_PATH = "/home/pi/storj/logs/"
 
 #INFLUXDB details
 INFLUXDB_DATABASE = "renter_monitoring"
@@ -33,19 +32,20 @@ CONSIGNMENT_MESSAGE = "handling storage consignment request from "
 
 
 # get location string (lat,long) from an ip address
-# uses http://ipinfo.io/ which has a limit of 1.000 requests per day
+# uses http://freegeoip.net/ which has a limit of 15.000 requests per hour
 # cant read dynddns
-def getLocationFromIP(ip):
-    try:
-        url = "http://ipinfo.io/" + ip + "/json"
-        response = urlopen(url)
-        data = json.load(response)
-        if "loc" in data:
-            return data["loc"]
-        else:
-            return -1
-    except HTTPError:
+def getGhashFromIP(ip):
+    url = "http://freegeoip.net/json/" + ip
+    response = requests.get(url)
+    data = json.loads(response.text)
+    if response.status_code == 200 and "latitude" in data and "longitude" in data:
+        return Geohash.encode(float(data['latitude']), float(data['longitude']), precision=7)
+    else if response.status_code == 203:
+        #limit of 15.000 reached use fallback
         return -1
+    else:
+        return -1
+
 
 def parseReceivedValidMessageLine(log_line):
     #load json from line
@@ -56,13 +56,10 @@ def parseReceivedValidMessageLine(log_line):
     message_json = json.loads(substring)
 
     #get location from message_json
-    location = getLocationFromIP(message_json["address"])
+    ghash = getGhashFromIP(message_json["address"])
 
     #dynddns cant be read with getLocationFromIP
-    if location is not -1:
-        lat,lng = location.split(",")
-        ghash = Geohash.encode(float(lat), float(lng), precision=7)
-
+    if ghash is not -1:
         result = {}
         result["timestamp"] = line_json["timestamp"]
         result["nodeID"] = message_json["nodeID"]
