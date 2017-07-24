@@ -1,7 +1,7 @@
 # storj-location-parser
 
 
-![grafana_screenshot](https://www.dropbox.com/s/94y9jdo087rhmel/Selection_003.png?dl=0)
+![grafana_screenshot](https://s18.postimg.org/4qau6w3i1/Selection_003.png)
 
 ## Requirements
 ```
