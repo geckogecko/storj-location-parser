@@ -4,6 +4,7 @@ import re
 import Geohash
 import datetime
 import Queue
+import os
 
 from urllib2 import urlopen
 from urllib2 import HTTPError
@@ -120,7 +121,7 @@ while 1:
                     sendToInfluxdb(buffered_messages)
                     buffered_messages.queue.clear()
     testdate = '{d.year}-{d.month}-{d.day}'.format(d=datetime.datetime.now())
-    if currentDate != testdate:
+    if currentDate != testdate and os.path.exists(NODE_ID + "_" + testdate + ".log"):
         currentDate = testdate
         file.close()
         file = open(NODE_ID + "_" + currentDate + ".log","r")

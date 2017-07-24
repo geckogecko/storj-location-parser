@@ -1,6 +1,6 @@
 # storj-location-parser
 
-Parses the location of nodes that talk with your storj node and sends that information to influxdb 
+Parses the location of nodes that talk with your storj node and sends that information to influxdb
 
 
 ![grafana_screenshot](https://s18.postimg.org/4qau6w3i1/Selection_003.png)
@@ -30,7 +30,7 @@ INFLUXDB_PORT = 8086
 INFLUXDB_ADMIN = "root"
 INFLUXDB_PASSWORD = "root"
 ```
-4. set debug level of the storj-daemon to 3
+4. set debug level of the storj-daemon to 3 or higher
 5. Create a database with the name of ```INFLUXDB_DATABASE``` in influxdb with:
 ```
 influx
@@ -39,5 +39,5 @@ CREATE DATABASE renter_monitoring
 
 6. Create the same datasource in grafana
 7. Import the grafana dashboard from: https://grafana.com/dashboards/2699
-8. Run the script with: 
+8. Run the script with:
 ``` python storj-location-parser.py ```
