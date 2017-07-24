@@ -37,11 +37,12 @@ CONSIGNMENT_MESSAGE = "handling storage consignment request from "
 def getGhashFromIP(ip):
     url = "http://freegeoip.net/json/" + ip
     response = requests.get(url)
-    data = json.loads(response.text)
-    if response.status_code == 200 and "latitude" in data and "longitude" in data:
-        return Geohash.encode(float(data['latitude']), float(data['longitude']), precision=7)
-    else if response.status_code == 203:
-        #limit of 15.000 reached use fallback
+    if response.status_code == 200:
+        data = json.loads(response.text)
+        if "latitude" in data and "longitude" in data:
+            return Geohash.encode(float(data['latitude']), float(data['longitude']), precision=7)
+    elif response.status_code == 203:
+        #limit of 15.000 reached implement fallback here
         return -1
     else:
         return -1
