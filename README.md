@@ -2,6 +2,7 @@
 
 
 ![grafana_screenshot](https://s18.postimg.org/4qau6w3i1/Selection_003.png)
+Download grafana dashboard from: https://grafana.com/dashboards/2699
 
 ## Requirements
 ```
