@@ -17,7 +17,7 @@ Influxdb python client: https://github.com/influxdata/influxdb-python
 ## Installation
 1. Install Influxdb and Grafana
 2. Clone this repo
-3. change the configuration of ```storj-location-parser.py```
+3. Change the configuration of ```storj-location-parser.py```
 
 ```
 #The nodeID to be monitored
@@ -31,13 +31,13 @@ INFLUXDB_ADMIN = "root"
 INFLUXDB_PASSWORD = "root"
 ```
 
-4. create a database with the name of ```INFLUXDB_DATABASE``` in influxdb with:
+4. Create a database with the name of ```INFLUXDB_DATABASE``` in influxdb with:
 ```
 influx
 CREATE DATABASE renter_monitoring
 ```
 
-5. create the same datasource in grafana
-6. import the grafana dashboard from: https://grafana.com/dashboards/2699
+5. Create the same datasource in grafana
+6. Import the grafana dashboard from: https://grafana.com/dashboards/2699
 7. Run the script with: 
 ``` python storj-location-parser.py ```
