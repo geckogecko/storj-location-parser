@@ -14,6 +14,9 @@ from influxdb import InfluxDBClient
 #The nodeID to be monitored
 NODE_ID = "23c20fc08ec5c1c23696b46daf0600d1c58170bc"
 
+#Path to your storj log folder
+LOG_FOLDER_PATH = "/root/storj/logs/"
+
 #INFLUXDB details
 INFLUXDB_DATABASE = "renter_monitoring"
 INFLUXDB_ADDRESS = "192.168.0.15"
@@ -103,7 +106,7 @@ buffered_messages = Queue.Queue(MAX_MESSAGES_BUFFER_SIZE)
 
 #get current date
 currentDate = '{d.year}-{d.month}-{d.day}'.format(d=datetime.datetime.now())
-file = open(NODE_ID + "_" + currentDate + ".log","r")
+file = open(LOG_FOLDER_PATH + NODE_ID + "_" + currentDate + ".log","r")
 while 1:
     where = file.tell()
     line = file.readline()
@@ -121,7 +124,7 @@ while 1:
                     sendToInfluxdb(buffered_messages)
                     buffered_messages.queue.clear()
     testdate = '{d.year}-{d.month}-{d.day}'.format(d=datetime.datetime.now())
-    if currentDate != testdate and os.path.exists(NODE_ID + "_" + testdate + ".log"):
+    if currentDate != testdate and os.path.exists(LOG_FOLDER_PATH + NODE_ID + "_" + testdate + ".log"):
         currentDate = testdate
         file.close()
         file = open(NODE_ID + "_" + currentDate + ".log","r")
