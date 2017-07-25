@@ -68,7 +68,7 @@ def parseReceivedValidMessageLine(log_line):
         result["ip"] = message_json["address"]
         result["ghash"] = ghash
 
-        if result["ip"] = BLACKLIST_LOOPBACK_IP:
+        if result["ip"] == BLACKLIST_LOOPBACK_IP:
             return -1
 
         return result
