@@ -11,14 +11,14 @@ from influxdb import InfluxDBClient
 
 
 #The nodeID to be monitored
-NODE_ID = "23c20fc08ec5c1c23696b46daf0600d1c58170bc"
+NODE_ID = "3217206e6e00c336ddf164a0ad88df7f22c8891b"
 
 #Path to your storj log folder
-LOG_FOLDER_PATH = "/home/pi/storj/logs/"
+LOG_FOLDER_PATH = "/home/georg/storj-location-parser/"
 
 #INFLUXDB details
 INFLUXDB_DATABASE = "renter_monitoring"
-INFLUXDB_ADDRESS = "192.168.0.15"
+INFLUXDB_ADDRESS = "173.212.220.3"
 INFLUXDB_PORT = 8086
 INFLUXDB_ADMIN = "root"
 INFLUXDB_PASSWORD = "root"
@@ -29,7 +29,8 @@ MAX_MESSAGES_BUFFER_SIZE = 30
 #string constants
 RECEIVED_VALID_MESSAGE = "received valid message from "
 CONSIGNMENT_MESSAGE = "handling storage consignment request from "
-
+BLACKLIST_STORJ_BRIDGE = "renters.prod.storj.io"
+BLACKLIST_LOOPBACK_IP = "127.0.0.1"
 
 # get location string (lat,long) from an ip address
 # uses http://freegeoip.net/ which has a limit of 15.000 requests per hour
@@ -67,31 +68,36 @@ def parseReceivedValidMessageLine(log_line):
         result["ip"] = message_json["address"]
         result["ghash"] = ghash
 
+        if result["ip"] = BLACKLIST_LOOPBACK_IP:
+            return -1
+
         return result
     else:
         return ""
 
 
 def sendToInfluxdb(buffered_messages):
+    points = []
     for i in range(buffered_messages.qsize()):
-        json_body = [
-            {
-                "measurement": "renters",
-                "tags": {
-                    "host": NODE_ID,
-                    "node": buffered_messages.queue[i]["nodeID"],
-                    "geohash": buffered_messages.queue[i]["ghash"],
-                    "ip": buffered_messages.queue[i]["ip"]
-                },
-                "time": buffered_messages.queue[i]["timestamp"],
-                "fields": {
-                    "value": 1
-                }
+        json_body ={
+            "measurement": "renters",
+            "tags": {
+                "host": NODE_ID,
+                "node": buffered_messages.queue[i]["nodeID"],
+                "geohash": buffered_messages.queue[i]["ghash"],
+                "ip": buffered_messages.queue[i]["ip"]
+            },
+            "time": buffered_messages.queue[i]["timestamp"],
+            "fields": {
+                "value": 1
             }
-        ]
+        }
+        points.append(json_body)
 
-        client = InfluxDBClient(INFLUXDB_ADDRESS, INFLUXDB_PORT, INFLUXDB_ADMIN, INFLUXDB_PASSWORD, INFLUXDB_DATABASE)
-        client.write_points(json_body)
+
+    print json.dumps(points)
+    client = InfluxDBClient(INFLUXDB_ADDRESS, INFLUXDB_PORT, INFLUXDB_ADMIN, INFLUXDB_PASSWORD, INFLUXDB_DATABASE)
+    client.write_points(points)
 
 
 
@@ -113,14 +119,15 @@ while 1:
         file.seek(where)
     else:
         if RECEIVED_VALID_MESSAGE in line:
-            message = parseReceivedValidMessageLine(line)
+            if not BLACKLIST_STORJ_BRIDGE in line:
+                message = parseReceivedValidMessageLine(line)
 
-            if message is not "":
-                buffered_messages.put(parseReceivedValidMessageLine(line))
+                if message is not "":
+                    buffered_messages.put(parseReceivedValidMessageLine(line))
 
-                if buffered_messages.full():
-                    sendToInfluxdb(buffered_messages)
-                    buffered_messages.queue.clear()
+                    if buffered_messages.full():
+                        sendToInfluxdb(buffered_messages)
+                        buffered_messages.queue.clear()
     testdate = '{d.year}-{d.month}-{d.day}'.format(d=datetime.datetime.now())
     if currentDate != testdate and os.path.exists(LOG_FOLDER_PATH + NODE_ID + "_" + testdate + ".log"):
         currentDate = testdate
