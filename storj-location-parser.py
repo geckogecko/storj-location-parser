@@ -8,7 +8,7 @@ import os
 import requests
 
 from influxdb import InfluxDBClient
-
+from influxdb import SeriesHelper
 
 #The nodeID to be monitored
 NODE_ID = "3217206e6e00c336ddf164a0ad88df7f22c8891b"
@@ -30,6 +30,7 @@ MAX_MESSAGES_BUFFER_SIZE = 30
 RECEIVED_VALID_MESSAGE = "received valid message from "
 CONSIGNMENT_MESSAGE = "handling storage consignment request from "
 BLACKLIST_STORJ_BRIDGE = "renters.prod.storj.io"
+BLACKLIST_STORJ_TUNNEL = "storj.dk"
 BLACKLIST_LOOPBACK_IP = "127.0.0.1"
 
 # get location string (lat,long) from an ip address
@@ -75,30 +76,27 @@ def parseReceivedValidMessageLine(log_line):
     else:
         return ""
 
-
 def sendToInfluxdb(buffered_messages):
-    points = []
+
+    myClient = InfluxDBClient(INFLUXDB_ADDRESS, INFLUXDB_PORT, INFLUXDB_ADMIN, INFLUXDB_PASSWORD, INFLUXDB_DATABASE)
+
+    class mySeriesHelper(SeriesHelper):
+	class Meta:
+	    client = myClient
+	    series_name = 'renters'
+	    time = ['time']
+	    fields = ['value']
+	    tags = ['host', 'node', 'geohash', 'ip']
+	    bulk_size = MAX_MESSAGES_BUFFER_SIZE
+	    autocommit = False
+
     for i in range(buffered_messages.qsize()):
-        json_body ={
-            "measurement": "renters",
-            "tags": {
-                "host": NODE_ID,
-                "node": buffered_messages.queue[i]["nodeID"],
-                "geohash": buffered_messages.queue[i]["ghash"],
-                "ip": buffered_messages.queue[i]["ip"]
-            },
-            "time": buffered_messages.queue[i]["timestamp"],
-            "fields": {
-                "value": 1
-            }
-        }
-        points.append(json_body)
-
-
-    print json.dumps(points)
-    client = InfluxDBClient(INFLUXDB_ADDRESS, INFLUXDB_PORT, INFLUXDB_ADMIN, INFLUXDB_PASSWORD, INFLUXDB_DATABASE)
-    client.write_points(points)
-
+        try:
+            mySeriesHelper(time=buffered_messages.queue[i]["timestamp"], value=1, host=NODE_ID, node=buffered_messages.queue[i]["nodeID"], geohash=buffered_messages.queue[i]["ghash"], ip=buffered_messages.queue[i]["ip"])
+        except:
+            print buffered_messages.queue[i]
+    print mySeriesHelper._json_body_()
+    mySeriesHelper.commit()
 
 
 # ---------------------------
@@ -119,7 +117,7 @@ while 1:
         file.seek(where)
     else:
         if RECEIVED_VALID_MESSAGE in line:
-            if not BLACKLIST_STORJ_BRIDGE in line:
+            if not BLACKLIST_STORJ_BRIDGE in line and not BLACKLIST_STORJ_TUNNEL in line:
                 message = parseReceivedValidMessageLine(line)
 
                 if message is not "":
