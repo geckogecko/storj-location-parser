@@ -130,4 +130,4 @@ while 1:
     if currentDate != testdate and os.path.exists(LOG_FOLDER_PATH + NODE_ID + "_" + testdate + ".log"):
         currentDate = testdate
         file.close()
-        file = open(NODE_ID + "_" + currentDate + ".log","r")
+        file = open(LOG_FOLDER_PATH + NODE_ID + "_" + currentDate + ".log","r")
